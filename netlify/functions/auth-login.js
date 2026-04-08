@@ -14,12 +14,7 @@ exports.handler = async (event) => {
     const [user] = await sql`SELECT * FROM users WHERE email = ${email.toLowerCase()}`;
     if (!user) return unauthorized();
 
-    if (!user.password) {
-  console.error("Password missing in DB:", user);
-  return serverError("Password field missing");
-}
-
-    const valid = await bcrypt.compare(password, user.password);
+    const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return unauthorized();
 
     const token = signToken({ id: user.id, email: user.email, name: user.name });
