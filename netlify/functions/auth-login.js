@@ -7,7 +7,16 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method not allowed' };
 
   try {
-    const { email, password } = JSON.parse(event.body || '{}');
+    let body;
+
+try {
+  body = event.body ? JSON.parse(event.body) : {};
+} catch (e) {
+  return badRequest("Invalid JSON");
+}
+
+const { email, password } = body;
+console.log("BODY:", body);
     if (!email || !password) return badRequest('Email and password required');
 
     const sql = getDb();
