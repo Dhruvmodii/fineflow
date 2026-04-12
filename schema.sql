@@ -93,3 +93,23 @@ CREATE INDEX IF NOT EXISTS idx_expenses_yearly ON expenses(user_id, is_yearly);
 CREATE INDEX IF NOT EXISTS idx_split_expenses_group ON split_expenses(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_budget_user_month ON budget_plans(user_id, year, month);
+
+-- Goals
+CREATE TABLE IF NOT EXISTS goals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  emoji VARCHAR(10) DEFAULT '🎯',
+  target_amount DECIMAL(12,2) NOT NULL,
+  saved_amount DECIMAL(12,2) DEFAULT 0,
+  deadline DATE,
+  monthly_budget DECIMAL(12,2),
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(user_id);
+
+-- User settings (currency, page visibility, etc.)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{}';

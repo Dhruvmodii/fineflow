@@ -1,4 +1,5 @@
-import { useState, useCallback, createContext, useContext } from 'react';
+import { useState, useCallback, createContext, useContext, useEffect, useRef } from 'react';
+import api from '../utils/api';
 
 export const CURRENCIES = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
@@ -24,39 +25,48 @@ const DEFAULT_PAGES = {
 const DEFAULT_SETTINGS = {
   currency: CURRENCIES[0],
   pages: DEFAULT_PAGES,
-  theme: 'dark',
   compactMode: false,
   showBalanceOnDashboard: true,
   weekStartMonday: true,
-  defaultExpenseCategory: 'Food & Groceries',
 };
 
 const SettingsContext = createContext(null);
 
 export const SettingsProvider = ({ children }) => {
-  const load = () => {
-    try {
-      const raw = localStorage.getItem('finflow_settings');
-      if (!raw) return DEFAULT_SETTINGS;
-      const saved = JSON.parse(raw);
-      return {
-        ...DEFAULT_SETTINGS,
-        ...saved,
-        pages: { ...DEFAULT_PAGES, ...saved.pages },
-        currency: saved.currency || DEFAULT_SETTINGS.currency,
-      };
-    } catch { return DEFAULT_SETTINGS; }
-  };
+  const [settings, setSettingsState] = useState(DEFAULT_SETTINGS);
+  const [loaded, setLoaded] = useState(false);
+  const saveTimer = useRef(null);
 
-  const [settings, setSettingsState] = useState(load);
+  // Load from Neon on mount
+  useEffect(() => {
+    const token = localStorage.getItem('finflow_token');
+    if (!token) { setLoaded(true); return; }
+
+    api.get('/settings').then(({ data }) => {
+      if (data.settings && Object.keys(data.settings).length > 0) {
+        setSettingsState(prev => ({
+          ...DEFAULT_SETTINGS,
+          ...data.settings,
+          pages: { ...DEFAULT_PAGES, ...(data.settings.pages || {}) },
+          currency: data.settings.currency || DEFAULT_SETTINGS.currency,
+        }));
+      }
+    }).catch(() => {}).finally(() => setLoaded(true));
+  }, []);
 
   const setSettings = useCallback((update) => {
     setSettingsState(prev => {
       const next = typeof update === 'function' ? update(prev) : { ...prev, ...update };
-      localStorage.setItem('finflow_settings', JSON.stringify(next));
+      // Debounce save to Neon — 600ms after last change
+      clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        api.put('/settings', next).catch(() => {});
+      }, 600);
       return next;
     });
   }, []);
+
+  if (!loaded) return null; // wait for settings before rendering app
 
   return (
     <SettingsContext.Provider value={{ ...settings, setSettings }}>
