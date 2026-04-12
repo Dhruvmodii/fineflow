@@ -5,8 +5,8 @@ import { TrendingUp, TrendingDown, DollarSign, Target, Plus, Send, ArrowRight } 
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
-
-const fmt = (n) => '₹' + parseFloat(n || 0).toLocaleString('en-IN');
+import { useSettings } from '../hooks/useSettings';
+import { ExpenseModal } from './ExpensesPage';
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 const StatCard = ({ icon: Icon, label, value, sub, color, delay }) => (
@@ -24,8 +24,10 @@ const StatCard = ({ icon: Icon, label, value, sub, color, delay }) => (
   </div>
 );
 
-const Dashboard = () => {
+const Dashboard = ({ onAddExpense }) => {
   const { user } = useAuth();
+  const { currency } = useSettings();
+  const fmt = (n) => currency.symbol + parseFloat(n || 0).toLocaleString('en-IN');
   const navigate = useNavigate();
   const now = new Date();
   const [month] = useState(now.getMonth() + 1);
@@ -34,6 +36,7 @@ const Dashboard = () => {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -73,6 +76,12 @@ const Dashboard = () => {
     spent: byCategory[cat.name] || 0,
   }));
 
+  const handleSaveExpense = async (form) => {
+    const { data } = await api.post('/expenses', form);
+    setExpenses(e => [data.expense, ...e]);
+    toast.success('Expense added!');
+  };
+
   const sendReport = async () => {
     setSending(true);
     try {
@@ -92,6 +101,12 @@ const Dashboard = () => {
 
   return (
     <div>
+      {showAddModal && (
+        <ExpenseModal
+          onSave={handleSaveExpense}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
@@ -107,7 +122,7 @@ const Dashboard = () => {
             {sending ? <span className="spinner" /> : <Send size={14} />}
             Email Report
           </button>
-          <button onClick={() => navigate('/expenses')} className="btn btn-primary btn-sm">
+          <button onClick={() => setShowAddModal(true)} className="btn btn-primary btn-sm">
             <Plus size={14} /> Add Expense
           </button>
         </div>
@@ -233,7 +248,7 @@ const Dashboard = () => {
         <div className="card" style={{ textAlign: 'center', padding: '32px', color: 'var(--text3)' }}>
           <div style={{ fontSize: '36px', marginBottom: '12px' }}>📝</div>
           <p>No expenses yet this month. Start tracking!</p>
-          <button onClick={() => navigate('/expenses')} className="btn btn-primary" style={{ margin: '16px auto 0' }}>
+          <button onClick={() => setShowAddModal(true)} className="btn btn-primary" style={{ margin: '16px auto 0' }}>
             <Plus size={15} /> Add First Expense
           </button>
         </div>

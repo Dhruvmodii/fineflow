@@ -3,13 +3,15 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Wand2, Save, Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
+import { useSettings } from '../hooks/useSettings';
 
-const fmt = (n) => '₹' + parseFloat(n || 0).toLocaleString('en-IN');
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const EMOJIS = ['🏠','🍛','⛽','📈','🎬','💪','✈️','🛍️','💊','📚','🎮','☕','👔','🐾','💡'];
 const COLORS_PRESET = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#f43f5e','#06b6d4','#84cc16','#f97316'];
 
 const BudgetPage = () => {
+  const { currency } = useSettings();
+  const fmt = (n) => currency.symbol + parseFloat(n || 0).toLocaleString('en-IN');
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
@@ -100,7 +102,7 @@ const BudgetPage = () => {
             <input className="input" type="number" value={year} onChange={e => setYear(parseInt(e.target.value))} min="2020" max="2030" />
           </div>
           <div style={{ flex: '2', minWidth: '160px' }}>
-            <label className="label">Income / Stipend (₹)</label>
+            <label className="label">Income / Stipend ({currency.symbol})</label>
             <input className="input" type="number" placeholder="e.g. 15000" value={income} onChange={e => setIncome(e.target.value)} />
           </div>
           <div style={{ flex: '1', minWidth: '140px' }}>

@@ -3,12 +3,14 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Plus, Trash2, Edit2, Calendar, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
+import { useSettings } from '../hooks/useSettings';
 
-const fmt = (n) => '₹' + parseFloat(n || 0).toLocaleString('en-IN');
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const CATEGORIES = ['Food & Groceries','Transport','Rent/Housing','Entertainment','Investments/Savings','Health & Fitness','Shopping','Utilities','Education','Vacation/Travel','Miscellaneous'];
 
 const YearlyPage = () => {
+  const { currency } = useSettings();
+  const fmt = (n) => currency.symbol + parseFloat(n || 0).toLocaleString('en-IN');
   const [year, setYear] = useState(new Date().getFullYear());
   const [expenses, setExpenses] = useState([]);
   const [monthlyData, setMonthlyData] = useState([]);
@@ -93,7 +95,7 @@ const YearlyPage = () => {
               <input className="input" placeholder="e.g. Insurance Premium" value={form.title} onChange={set('title')} />
             </div>
             <div className="form-group">
-              <label className="label">Amount (₹)</label>
+              <label className="label">Amount ({currency.symbol})</label>
               <input className="input" type="number" placeholder="0" value={form.amount} onChange={set('amount')} />
             </div>
             <div className="form-group">

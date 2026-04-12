@@ -3,8 +3,8 @@ import { Users, Plus, ArrowRight, Check, X, DollarSign, UserPlus, ChevronLeft, R
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
+import { useSettings } from '../hooks/useSettings';
 
-const fmt = (n) => '₹' + parseFloat(n || 0).toLocaleString('en-IN');
 const ICONS = ['🏠','✈️','🎉','🍕','🏖️','🚗','💼','🎮','🏋️','👥'];
 
 // ───── Create Group Modal ─────
@@ -64,6 +64,8 @@ const CreateGroupModal = ({ onClose, onCreate }) => {
 // ───── Add Expense Modal ─────
 const AddExpenseModal = ({ group, members, onClose, onAdd }) => {
   const { user } = useAuth();
+  const { currency } = useSettings();
+  const fmt = (n) => currency.symbol + parseFloat(n || 0).toLocaleString('en-IN');
   const [form, setForm] = useState({ title: '', amount: '', split_type: 'equal', expense_date: new Date().toISOString().slice(0,10), notes: '', is_recurring: false, recurrence: 'none' });
   const [splits, setSplits] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -116,7 +118,7 @@ const AddExpenseModal = ({ group, members, onClose, onAdd }) => {
             <input className="input" placeholder="Dinner, Hotel, etc." value={form.title} onChange={set('title')} />
           </div>
           <div className="form-group">
-            <label className="label">Amount (₹)</label>
+            <label className="label">Amount ({currency.symbol})</label>
             <input className="input" type="number" placeholder="0" value={form.amount} onChange={set('amount')} />
           </div>
         </div>
@@ -150,7 +152,7 @@ const AddExpenseModal = ({ group, members, onClose, onAdd }) => {
                   ) : form.split_type === 'percentage' ? (
                     <input type="number" className="input" style={{ width: '60px', padding: '4px 8px', fontSize: '12px' }} placeholder="%" value={s.percentage || ''} onChange={e => updateSplit(i, 'percentage', e.target.value)} />
                   ) : (
-                    <input type="number" className="input" style={{ width: '90px', padding: '4px 8px', fontSize: '12px' }} placeholder="₹0" value={s.amount || ''} onChange={e => updateSplit(i, 'amount', e.target.value)} />
+                    <input type="number" className="input" style={{ width: '90px', padding: '4px 8px', fontSize: '12px' }} placeholder={`${currency.symbol}0`} value={s.amount || ''} onChange={e => updateSplit(i, 'amount', e.target.value)} />
                   )}
                 </div>
               ))}
@@ -187,6 +189,8 @@ const AddExpenseModal = ({ group, members, onClose, onAdd }) => {
 // ───── Group Detail View ─────
 const GroupDetail = ({ groupId, onBack }) => {
   const { user } = useAuth();
+  const { currency } = useSettings();
+  const fmt = (n) => currency.symbol + parseFloat(n || 0).toLocaleString('en-IN');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddExp, setShowAddExp] = useState(false);
@@ -374,6 +378,8 @@ const GroupDetail = ({ groupId, onBack }) => {
 
 // ───── Main Splits Page ─────
 const SplitsPage = () => {
+  const { currency } = useSettings();
+  const fmt = (n) => currency.symbol + parseFloat(n || 0).toLocaleString('en-IN');
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
